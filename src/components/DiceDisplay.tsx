@@ -102,7 +102,7 @@ export const DiceDisplay: React.FC<DiceDisplayProps> = ({
     : `6面[${d6}] + 4面[${d4}] = 合計 ${d6 + d4}`;
 
   return (
-    <div className="flex items-center justify-start gap-2 sm:gap-3 select-none py-0.5">
+    <div className="flex flex-col items-start gap-1.5 sm:flex-row sm:items-center sm:gap-3 select-none py-0.5">
       {/* Fixed-position Dice Pair (never shifts horizontally when text length changes) */}
       <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
         {/* Sculpted Ivory 6-sided Die with realistic tumbling, deceleration, and grounded shadow */}

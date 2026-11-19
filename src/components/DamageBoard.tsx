@@ -43,7 +43,7 @@ export const DamageBoard: React.FC<DamageBoardProps> = ({
   }, [players]);
 
   return (
-    <div className="flex flex-col shrink-0 select-none w-[94px] sm:w-[116px] lg:w-[138px]">
+    <div className="flex flex-col shrink-0 select-none w-[86px] sm:w-[116px] lg:w-[138px]">
       {/* Physical thick board wrapper with unified bottom-right tabletop contact shadow */}
       <div className="relative">
         {/* Soft tabletop ambient + contact shadow */}

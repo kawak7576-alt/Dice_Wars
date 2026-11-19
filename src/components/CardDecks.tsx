@@ -52,6 +52,72 @@ const DECK_META: {
   },
 ];
 
+interface TurnOrderRosterProps {
+  players: PublicPlayerView[];
+  activePlayerId?: string | null;
+  myPlayerId?: string | null;
+  onSelectPlayer?: (player: PublicPlayerView) => void;
+  className?: string;
+}
+
+export const TurnOrderRoster: React.FC<TurnOrderRosterProps> = ({
+  players,
+  activePlayerId,
+  myPlayerId,
+  onSelectPlayer,
+  className = '',
+}) => {
+  if (players.length === 0) return null;
+
+  return (
+    <div
+      className={`gold-panel rounded-lg p-1.5 w-full ${className}`}
+      style={{ boxShadow: '3px 4px 10px rgba(0,0,0,0.78)' }}
+    >
+      <div className="flex flex-col gap-1">
+        {players.map((p) => {
+          const isActive = p.id === activePlayerId;
+          const isMe = p.id === myPlayerId;
+          return (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => onSelectPlayer?.(p)}
+              title={`${p.name}${isMe ? '（自分）' : ''}の詳細情報を見る`}
+              className={`w-full px-1.5 py-1 rounded border text-left transition-colors flex items-center justify-between gap-1 ${
+                isActive
+                  ? 'bg-amber-950/80 border-amber-300'
+                  : isMe
+                  ? 'bg-slate-900/65 border-sky-300/55 hover:border-amber-300'
+                  : 'bg-black/45 border-[#c99e48]/35 hover:border-amber-300'
+              } ${!p.isAlive ? 'opacity-45 grayscale' : ''}`}
+            >
+              <span className="flex items-center gap-1 min-w-0">
+                <span
+                  className={`w-2.5 h-2.5 rounded-full shrink-0 border ${
+                    isActive ? 'border-amber-200 ring-1 ring-amber-300' : 'border-amber-100'
+                  }`}
+                  style={{ backgroundColor: p.color.hex }}
+                />
+                <span
+                  className={`text-[9px] sm:text-[10px] font-bold truncate ${
+                    isMe ? 'text-sky-100' : 'text-amber-50'
+                  }`}
+                >
+                  {p.name}
+                </span>
+              </span>
+              <span className="text-[9px] font-extrabold tabular-nums text-amber-300 shrink-0">
+                {p.isAlive ? `${p.damage}` : '落'}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 export const CardDecks: React.FC<CardDecksProps> = ({
   counts,
   highlightDeck,
@@ -62,9 +128,9 @@ export const CardDecks: React.FC<CardDecksProps> = ({
   onSelectPlayer,
 }) => {
   return (
-    <div className="flex flex-col items-center gap-2.5 sm:gap-3 shrink-0 w-[68px] sm:w-[86px] lg:w-[98px] select-none">
-      {/* 3 Card Decks scaled to ~90% with tactile multi-card thickness, subtle misalignment & left-side shadow */}
-      <div className="flex flex-col items-center gap-3 sm:gap-3.5 w-full">
+    <div className="flex flex-col items-center gap-2 sm:gap-3 shrink-0 w-full sm:w-[86px] lg:w-[98px] select-none">
+      {/* Mobile (<sm): horizontal row (Green, White, Black) above Area Board. Desktop (sm+): vertical stack */}
+      <div className="flex flex-row sm:flex-col items-center justify-center gap-3 sm:gap-3.5 w-full">
         {DECK_META.map((item) => {
           const isHighlighted = highlightDeck === item.deck;
           const count = counts[item.deck];
@@ -76,7 +142,7 @@ export const CardDecks: React.FC<CardDecksProps> = ({
               key={item.deck}
               type="button"
               onClick={() => onInspectDeck(item.deck)}
-              className="group relative w-[58px] sm:w-[74px] lg:w-[85px] text-left transition-transform hover:-translate-y-0.5 active:scale-[0.98]"
+              className="group relative w-[52px] sm:w-[74px] lg:w-[85px] text-left transition-transform hover:-translate-y-0.5 active:scale-[0.98]"
               title={`${item.jpLabel}一覧（残 ${count}枚）`}
             >
               {/* Grounded tabletop contact shadow beneath left-leaning deck base */}
@@ -159,54 +225,14 @@ export const CardDecks: React.FC<CardDecksProps> = ({
         })}
       </div>
 
-      {/* Turn-Order Players List below Black Card Deck (includes self, no header text) */}
-      {players.length > 0 && (
-        <div
-          className="gold-panel rounded-lg p-1.5 mt-0.5 w-full"
-          style={{ boxShadow: '3px 4px 10px rgba(0,0,0,0.78)' }}
-        >
-          <div className="flex flex-col gap-1">
-            {players.map((p) => {
-              const isActive = p.id === activePlayerId;
-              const isMe = p.id === myPlayerId;
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => onSelectPlayer?.(p)}
-                  title={`${p.name}${isMe ? '（自分）' : ''}の詳細情報を見る`}
-                  className={`w-full px-1.5 py-1 rounded border text-left transition-colors flex items-center justify-between gap-1 ${
-                    isActive
-                      ? 'bg-amber-950/80 border-amber-300'
-                      : isMe
-                      ? 'bg-slate-900/65 border-sky-300/55 hover:border-amber-300'
-                      : 'bg-black/45 border-[#c99e48]/35 hover:border-amber-300'
-                  } ${!p.isAlive ? 'opacity-45 grayscale' : ''}`}
-                >
-                  <span className="flex items-center gap-1 min-w-0">
-                    <span
-                      className={`w-2.5 h-2.5 rounded-full shrink-0 border ${
-                        isActive ? 'border-amber-200 ring-1 ring-amber-300' : 'border-amber-100'
-                      }`}
-                      style={{ backgroundColor: p.color.hex }}
-                    />
-                    <span
-                      className={`text-[9px] sm:text-[10px] font-bold truncate ${
-                        isMe ? 'text-sky-100' : 'text-amber-50'
-                      }`}
-                    >
-                      {p.name}
-                    </span>
-                  </span>
-                  <span className="text-[9px] font-extrabold tabular-nums text-amber-300 shrink-0">
-                    {p.isAlive ? `${p.damage}` : '落'}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {/* Desktop/Tablet (sm+): Turn-Order Players List directly below Black Card Deck */}
+      <TurnOrderRoster
+        players={players}
+        activePlayerId={activePlayerId}
+        myPlayerId={myPlayerId}
+        onSelectPlayer={onSelectPlayer}
+        className="hidden sm:block mt-0.5"
+      />
     </div>
   );
 };

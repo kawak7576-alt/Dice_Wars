@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Dices, Hourglass, Menu, Users } from 'lucide-react';
 import woodTabletopImg from './assets/images/tabletop_mahogany_wood_1794830458910.jpg';
 import { AREAS, getFactionLabel } from './data/gameData.ts';
-import { CardDecks } from './components/CardDecks.tsx';
+import { CardDecks, TurnOrderRoster } from './components/CardDecks.tsx';
 import { DamageBoard } from './components/DamageBoard.tsx';
 import { DiceDisplay } from './components/DiceDisplay.tsx';
 import { LobbyScreen } from './components/LobbyScreen.tsx';
@@ -533,26 +533,41 @@ export default function App() {
 
       {/* Main Tabletop Area */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-1.5 py-2 sm:px-4 flex flex-col lg:flex-row items-center lg:items-start justify-center gap-3 lg:gap-6">
-        {/* Board Trio: Damage Board + Pentagram Star Board + 3 Card Decks */}
+        {/* Board Trio: Mobile 2-col Grid (Damage left, Horizontal Decks + Larger Area Board right), Desktop 3-col Flex */}
         <div className="flex flex-col items-center flex-1 w-full max-w-3xl">
-          <div className="w-full flex items-center justify-between sm:justify-center gap-1.5 sm:gap-4 lg:gap-6">
+          <div className="w-full grid grid-cols-[86px_minmax(0,1fr)] gap-x-2 gap-y-2 items-center sm:flex sm:flex-row sm:items-center sm:justify-center sm:gap-4 lg:gap-6">
             {/* Left: Damage Board (0-14) */}
-            <DamageBoard
-              players={renderedPlayers}
-              activePlayerId={room.activePlayerId}
-              myPlayerId={room.myPlayerId}
-              combatTargetIds={activeCombatTargetIds}
-              onSelectPlayer={(p) => {
-                if (isMyTurn && room.phase === 'ATTACK' && attackTargetIdSet.has(p.id)) {
-                  setShowAttackModal(true);
-                } else {
-                  setInspectedPlayer(p);
-                }
-              }}
-            />
+            <div className="col-start-1 row-start-1 row-span-2 self-center sm:order-1">
+              <DamageBoard
+                players={renderedPlayers}
+                activePlayerId={room.activePlayerId}
+                myPlayerId={room.myPlayerId}
+                combatTargetIds={activeCombatTargetIds}
+                onSelectPlayer={(p) => {
+                  if (isMyTurn && room.phase === 'ATTACK' && attackTargetIdSet.has(p.id)) {
+                    setShowAttackModal(true);
+                  } else {
+                    setInspectedPlayer(p);
+                  }
+                }}
+              />
+            </div>
 
-            {/* Center: Pentagram Star Board */}
-            <div className="flex-1 min-w-0 flex flex-col items-center">
+            {/* Mobile Top-Right / Desktop Right: 3 Card Decks (Horizontal Green-White-Black on mobile, Vertical + Roster on sm+) */}
+            <div className="col-start-2 row-start-1 flex justify-center sm:order-3 sm:block">
+              <CardDecks
+                counts={room.deckCounts}
+                highlightDeck={highlightDeck}
+                onInspectDeck={(deck) => setInspectedDeck(deck)}
+                players={renderedPlayers}
+                activePlayerId={room.activePlayerId}
+                myPlayerId={room.myPlayerId}
+                onSelectPlayer={(p) => setInspectedPlayer(p)}
+              />
+            </div>
+
+            {/* Mobile Lower-Right (enlarged!) / Desktop Center: Pentagon Area Board */}
+            <div className="col-start-2 row-start-2 min-w-0 w-full flex flex-col items-center sm:order-2 sm:flex-1">
               <PentagramBoard
                 players={renderedPlayers}
                 activePlayerId={room.activePlayerId}
@@ -569,57 +584,57 @@ export default function App() {
                 onSelectArea={(aid) => setInspectedArea(aid)}
               />
             </div>
-
-            {/* Right: 3 Card Decks + Turn-Order Players List */}
-            <CardDecks
-              counts={room.deckCounts}
-              highlightDeck={highlightDeck}
-              onInspectDeck={(deck) => setInspectedDeck(deck)}
-              players={renderedPlayers}
-              activePlayerId={room.activePlayerId}
-              myPlayerId={room.myPlayerId}
-              onSelectPlayer={(p) => setInspectedPlayer(p)}
-            />
           </div>
 
-          {/* Fixed Dice Spot (lower-right of Damage Board; left-anchored so text never shifts dice) */}
-          <div className="-mt-1 sm:-mt-2 w-full flex justify-start pl-[98px] sm:pl-[132px] lg:pl-[162px] min-h-[46px] sm:min-h-[52px]">
-            {room.lastDice && (
-              <DiceDisplay
-                d6={room.lastDice.d6}
-                d4={room.lastDice.d4}
-                purpose={room.lastDice.purpose}
-                rollingKey={room.lastDice.rollId ?? `${room.turn}-${room.logs.length}`}
-                highlight={diceHighlight}
-              />
-            )}
-          </div>
+          {/* Below Board: Mobile Bottom-Left (Dice + Calc + Action Log aligned left under DamageBoard) & Bottom-Right (Turn-Order Roster shifted slightly down) */}
+          <div className="mt-1.5 sm:mt-2 w-full flex items-start justify-between gap-2 sm:flex-col sm:items-stretch">
+            <div className="flex-1 min-w-0 flex flex-col items-start gap-1.5 sm:pl-[132px] lg:pl-[162px]">
+              <div className="min-h-[44px] sm:min-h-[52px] flex items-start">
+                {room.lastDice && (
+                  <DiceDisplay
+                    d6={room.lastDice.d6}
+                    d4={room.lastDice.d4}
+                    purpose={room.lastDice.purpose}
+                    rollingKey={room.lastDice.rollId ?? `${room.turn}-${room.logs.length}`}
+                    highlight={diceHighlight}
+                  />
+                )}
+              </div>
 
-          {/* Inspected Area & Latest Action Strip */}
-          <div className="mt-1.5 sm:mt-2 flex flex-col items-center gap-2 w-full">
-            {inspectedArea && (
-              <div className="gold-panel rounded-lg px-3 py-1.5 text-xs text-amber-100 flex items-center gap-2 max-w-md">
-                <span className="font-bold text-amber-300">{AREAS[inspectedArea].name}：</span>
-                <span>{AREAS[inspectedArea].effectSummary}</span>
+              {latestLog && (
                 <button
                   type="button"
-                  onClick={() => setInspectedArea(null)}
-                  className="text-amber-300 underline ml-1 shrink-0"
+                  onClick={() => setShowMenu(true)}
+                  className="px-2.5 py-1.5 rounded-lg bg-black/50 border border-[#c59b47]/40 text-[11px] sm:text-xs text-amber-100/90 text-left max-w-full sm:max-w-lg line-clamp-2 sm:truncate hover:border-amber-400"
                 >
-                  閉じる
+                  {latestLog.text}
                 </button>
-              </div>
-            )}
+              )}
 
-            {latestLog && (
-              <button
-                type="button"
-                onClick={() => setShowMenu(true)}
-                className="px-3 py-1.5 rounded-lg bg-black/50 border border-[#c59b47]/40 text-[11px] sm:text-xs text-amber-100/90 max-w-lg truncate hover:border-amber-400"
-              >
-                {latestLog.text}
-              </button>
-            )}
+              {inspectedArea && (
+                <div className="gold-panel rounded-lg px-3 py-1.5 text-xs text-amber-100 flex items-center gap-2 max-w-full sm:max-w-md">
+                  <span className="font-bold text-amber-300 shrink-0">{AREAS[inspectedArea].name}：</span>
+                  <span className="min-w-0">{AREAS[inspectedArea].effectSummary}</span>
+                  <button
+                    type="button"
+                    onClick={() => setInspectedArea(null)}
+                    className="text-amber-300 underline ml-1 shrink-0"
+                  >
+                    閉じる
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Only: Turn-Order Players List placed slightly down on bottom-right */}
+            <div className="sm:hidden shrink-0 pt-3 w-[104px]">
+              <TurnOrderRoster
+                players={renderedPlayers}
+                activePlayerId={room.activePlayerId}
+                myPlayerId={room.myPlayerId}
+                onSelectPlayer={(p) => setInspectedPlayer(p)}
+              />
+            </div>
           </div>
         </div>
 
