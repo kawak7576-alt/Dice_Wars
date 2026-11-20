@@ -13,7 +13,15 @@ import {
   VolumeX,
   X,
 } from 'lucide-react';
-import { AREAS, BLACK_CARD_DEFS, GREEN_CARD_DEFS, WHITE_CARD_DEFS, getFactionLabel } from '../data/gameData.ts';
+import damageBoardImg from '../assets/images/damage_track_board_1794830461204.jpg';
+import {
+  AREAS,
+  BLACK_CARD_DEFS,
+  DAMAGE_BOARD_LABELS,
+  GREEN_CARD_DEFS,
+  WHITE_CARD_DEFS,
+  getFactionLabel,
+} from '../data/gameData.ts';
 import type {
   AreaId,
   CardInstance,
@@ -25,17 +33,27 @@ import type {
   RoomView,
 } from '../types/game.ts';
 import { CharacterAvatar } from './CharacterAvatar.tsx';
+import { PlayerMedal } from './PlayerMedal.tsx';
 import { RulebookContent } from './RulebookContent.tsx';
 
 interface ModalBackdropProps {
   title: string;
   onClose?: () => void;
+  centered?: boolean;
   children: React.ReactNode;
 }
 
-const ModalBackdrop: React.FC<ModalBackdropProps> = ({ title, onClose, children }) => (
-  <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-0 sm:p-4">
-    <div className="gold-panel w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl max-h-[88vh] flex flex-col overflow-hidden">
+const ModalBackdrop: React.FC<ModalBackdropProps> = ({ title, onClose, centered = false, children }) => (
+  <div
+    className={`fixed inset-0 z-50 flex justify-center bg-black/70 backdrop-blur-sm ${
+      centered ? 'items-center p-3 sm:p-4' : 'items-end sm:items-center p-0 sm:p-4'
+    }`}
+  >
+    <div
+      className={`gold-panel w-full sm:max-w-lg max-h-[88vh] flex flex-col overflow-hidden ${
+        centered ? 'rounded-2xl max-w-md' : 'rounded-t-2xl sm:rounded-2xl'
+      }`}
+    >
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#c59b47]/50 bg-[#141a28]">
         <h3 className="text-base sm:text-lg font-bold text-amber-200 truncate">{title}</h3>
         {onClose && (
@@ -742,6 +760,205 @@ export const PublicPlayerModal: React.FC<PublicPlayerModalProps> = ({ player, on
     </div>
   </ModalBackdrop>
 );
+
+interface DamageBoardModalProps {
+  players: PublicPlayerView[];
+  activePlayerId: string | null;
+  myPlayerId: string | null;
+  myPrivate: PrivatePlayerInfo | null;
+  onSelectPlayer: (player: PublicPlayerView) => void;
+  onClose: () => void;
+}
+
+const EXPANDED_STAGES = [14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+
+export const DamageBoardModal: React.FC<DamageBoardModalProps> = ({
+  players,
+  activePlayerId,
+  myPlayerId,
+  myPrivate,
+  onSelectPlayer,
+  onClose,
+}) => {
+  const me = players.find((p) => p.id === myPlayerId);
+  const myChar = myPrivate?.character ?? null;
+  const myMaxHp = myChar?.maxHp ?? null;
+  const myCurrentHp = me && myMaxHp !== null ? Math.max(0, myMaxHp - me.damage) : null;
+
+  return (
+    <ModalBackdrop title="拡大ダメージボード" centered onClose={onClose}>
+      {/* Personal HP & Known MaxHP Summary */}
+      {me && myChar && myMaxHp !== null && myCurrentHp !== null && (
+        <div className="px-3 py-2 rounded-xl bg-black/55 border border-[#c99e48]/55 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div className="font-bold text-amber-100">
+            あなた：{myChar.name}（{myChar.boardCode}）
+          </div>
+          <div className="flex items-center gap-2.5 tabular-nums font-extrabold">
+            <span className="text-sky-200">現在ダメージ: {me.damage}</span>
+            <span className="text-amber-300">最大HP: {myMaxHp}</span>
+            <span className="text-emerald-300">残HP: {myCurrentHp}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Faction Alphabet Legend */}
+      <div className="px-2.5 py-1.5 rounded-lg bg-black/45 border border-[#c99e48]/35 text-[10px] sm:text-[11px] text-amber-100/90 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+        <span className="inline-flex items-center gap-1">
+          <span className="w-3.5 h-3.5 rounded-full bg-purple-900 border border-purple-300 text-[9px] font-black inline-flex items-center justify-center text-purple-100">
+            U
+          </span>
+          シャドウ (U:11 V:13 W:14)
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span className="w-3.5 h-3.5 rounded-full bg-yellow-400 border border-yellow-100 text-[9px] font-black inline-flex items-center justify-center text-slate-950">
+            A
+          </span>
+          シチズン (A:8 B:10 C:11 D:13)
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span className="w-3.5 h-3.5 rounded-full bg-red-700 border border-red-300 text-[9px] font-black inline-flex items-center justify-center text-red-50">
+            E
+          </span>
+          レイダー (E:10 F:12 G:14)
+        </span>
+      </div>
+
+      {/* Expanded Physical Damage Track Board */}
+      <div
+        className="relative rounded-xl overflow-hidden bg-[#160e09]"
+        style={{
+          borderTop: '2.5px solid #e2bc68',
+          borderLeft: '2.5px solid #cfa54e',
+          borderRight: '2.5px solid #7d5b20',
+          borderBottom: '2.5px solid #634615',
+          boxShadow: '4px 8px 18px rgba(4, 2, 1, 0.85)',
+        }}
+      >
+        <img
+          src={damageBoardImg}
+          alt="拡大ダメージボード"
+          referrerPolicy="no-referrer"
+          className="absolute inset-0 w-full h-full object-cover scale-[1.35] pointer-events-none opacity-85"
+        />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'linear-gradient(90deg, rgba(10,6,4,0.82) 0%, rgba(12,8,6,0.58) 50%, rgba(10,6,4,0.82) 100%)',
+          }}
+        />
+
+        <div className="relative z-10 flex flex-col divide-y divide-[#dfba64]/35">
+          {EXPANDED_STAGES.map((stage) => {
+            const labels = DAMAGE_BOARD_LABELS[stage] ?? [];
+            const playersHere = players.filter((p) => p.damage === stage);
+            const isMyMaxHpStage = myMaxHp === stage;
+            const revealedMaxHere = players.filter(
+              (p) => p.id !== myPlayerId && p.isRevealed && p.character?.maxHp === stage
+            );
+
+            return (
+              <div
+                key={stage}
+                className={`flex items-center justify-between gap-2 px-2.5 py-1.5 min-h-[30px] ${
+                  isMyMaxHpStage ? 'bg-amber-500/15' : ''
+                }`}
+              >
+                {/* Left: Stage Numeral + Alphabet Markers */}
+                <div className="flex items-center gap-1.5 shrink-0 min-w-[78px]">
+                  <span className="text-xs sm:text-sm font-black tabular-nums text-amber-100 w-5 text-right drop-shadow">
+                    {stage}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    {labels.map((code) => {
+                      const colorClass = ['U', 'V', 'W'].includes(code)
+                        ? 'bg-gradient-to-b from-purple-800 to-purple-950 border-purple-300/90 text-purple-100'
+                        : ['A', 'B', 'C', 'D'].includes(code)
+                        ? 'bg-gradient-to-b from-yellow-400 to-amber-500 border-yellow-100 text-slate-950'
+                        : 'bg-gradient-to-b from-red-600 to-red-900 border-red-300/90 text-red-50';
+                      return (
+                        <span
+                          key={code}
+                          className={`w-[20px] h-[20px] rounded-full flex items-center justify-center text-[10px] font-black border ${colorClass}`}
+                          style={{ boxShadow: '1px 1.5px 3px rgba(0,0,0,0.85)' }}
+                        >
+                          {code}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Center/Right: MaxHP markers + Current Player Pawns */}
+                <div className="flex items-center justify-end gap-1.5 flex-wrap flex-1 min-w-0">
+                  {isMyMaxHpStage && (
+                    <span className="px-1.5 py-0.5 rounded bg-amber-950/90 border border-amber-300 text-[10px] font-extrabold text-amber-200 whitespace-nowrap">
+                      ★自分の最大HP
+                    </span>
+                  )}
+
+                  {revealedMaxHere.map((rp) => (
+                    <span
+                      key={`max-${rp.id}`}
+                      className="px-1.5 py-0.5 rounded bg-black/75 border border-amber-400/55 text-[10px] font-bold text-amber-100/90 whitespace-nowrap"
+                    >
+                      {rp.name} 最大HP
+                    </span>
+                  ))}
+
+                  {playersHere.map((p) => {
+                    const isActive = p.id === activePlayerId;
+                    const isMe = p.id === myPlayerId;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => {
+                          onClose();
+                          onSelectPlayer(p);
+                        }}
+                        className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md border text-[10px] font-bold transition-colors ${
+                          isActive
+                            ? 'bg-amber-950/90 border-amber-300 text-amber-100'
+                            : isMe
+                            ? 'bg-slate-900/85 border-sky-300 text-sky-100'
+                            : 'bg-black/75 border-[#c99e48]/55 text-amber-50 hover:border-amber-300'
+                        } ${!p.isAlive ? 'opacity-50 grayscale' : ''}`}
+                      >
+                        <PlayerMedal
+                          name={p.name}
+                          colorId={p.color.id}
+                          colorHex={p.color.hex}
+                          colorRing={p.color.ring}
+                          size="sm"
+                          isAlive={p.isAlive}
+                          isActive={isActive}
+                          isMe={isMe}
+                        />
+                        <span className="truncate max-w-[74px]">
+                          {p.name}
+                          {isMe ? '(自)' : ''}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={onClose}
+        className="w-full py-2.5 rounded-xl bg-black/55 border border-[#c99e48]/60 text-xs sm:text-sm font-bold text-amber-100 hover:border-amber-300"
+      >
+        閉じる
+      </button>
+    </ModalBackdrop>
+  );
+};
 
 interface CardInspectModalProps {
   card: CardInstance;

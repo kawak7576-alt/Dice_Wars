@@ -104,15 +104,15 @@ export const PlayerPanel: React.FC<PlayerPanelProps> = ({
   const slotCount = Math.max(4, me.equipment.length);
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-2 pb-2.5 sm:px-4 sm:pb-3.5 relative z-20">
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
+    <div className="w-full max-w-4xl mx-auto px-1.5 pb-1.5 sm:px-4 sm:pb-3.5 relative z-20">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 sm:gap-3">
         {/* Left: Leather & Antique Gold Character Sheet with restrained damage shudder & clear turn emphasis */}
         <motion.div
           key={`hud-${damageShakeKey ?? 0}`}
           initial={damageShakeKey ? { x: 0 } : false}
           animate={damageShakeKey ? { x: [0, -5, 5, -3, 2, 0] } : { x: 0 }}
           transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
-          className={`leather-hud-panel rounded-2xl p-2.5 sm:p-3 flex items-center gap-2.5 sm:gap-3.5 flex-1 min-w-0 relative transition-colors ${
+          className={`leather-hud-panel rounded-xl sm:rounded-2xl p-2 sm:p-3 flex items-center gap-2 sm:gap-3.5 flex-1 min-w-0 relative transition-colors ${
             isMyTurn ? 'ring-2 ring-[#ecd07d]/85' : ''
           }`}
         >
@@ -124,7 +124,7 @@ export const PlayerPanel: React.FC<PlayerPanelProps> = ({
 
           {/* Active Turn Brass Corner Plaque */}
           {isMyTurn && (
-            <span className="pointer-events-none absolute -top-2.5 left-4 px-2 py-[1px] rounded bg-gradient-to-b from-[#f0cf7b] to-[#b58732] border border-[#241608] text-[9px] font-black text-[#1a1005] shadow">
+            <span className="pointer-events-none absolute -top-2 left-3 sm:left-4 px-1.5 sm:px-2 py-[1px] rounded bg-gradient-to-b from-[#f0cf7b] to-[#b58732] border border-[#241608] text-[8.5px] sm:text-[9px] font-black text-[#1a1005] shadow">
               あなたの手番
             </span>
           )}
@@ -137,7 +137,11 @@ export const PlayerPanel: React.FC<PlayerPanelProps> = ({
             title="キャラクター詳細・勝利条件を確認"
           >
             <div className="relative rounded-full p-0.5 bg-gradient-to-b from-[#f6dc93] to-[#8a6522] shadow-[0_4px_12px_rgba(0,0,0,0.85)]">
-              <CharacterAvatar character={hidePrivate ? null : char} size={56} />
+              <CharacterAvatar
+                character={hidePrivate ? null : char}
+                size={56}
+                className="w-11 h-11 sm:w-14 sm:h-14"
+              />
               {!me.isAlive && (
                 <div className="absolute inset-0 rounded-full bg-black/80 flex items-center justify-center text-[10px] font-bold text-red-300">
                   脱落
@@ -145,7 +149,7 @@ export const PlayerPanel: React.FC<PlayerPanelProps> = ({
               )}
             </div>
             <span
-              className={`relative z-10 mt-1 px-2.5 py-0.5 rounded-sm border text-[10px] font-extrabold bg-gradient-to-b shadow-md whitespace-nowrap ${
+              className={`relative z-10 mt-0.5 sm:mt-1 px-1.5 sm:px-2.5 py-[1px] sm:py-0.5 rounded-sm border text-[9px] sm:text-[10px] font-extrabold bg-gradient-to-b shadow-md whitespace-nowrap ${
                 hidePrivate ? 'from-slate-800 to-slate-950 border-slate-500 text-slate-200' : factionBadge
               }`}
             >
@@ -154,12 +158,12 @@ export const PlayerPanel: React.FC<PlayerPanelProps> = ({
           </button>
 
           {/* Character Name, HP Gauge, Status (synchronized with DamageBoard marker motion) */}
-          <div className="flex flex-col justify-center min-w-[100px] sm:min-w-[126px]">
-            <div className="flex items-center gap-1">
+          <div className="flex flex-col justify-center min-w-[84px] sm:min-w-[126px]">
+            <div className="flex items-center gap-0.5 sm:gap-1">
               <button
                 type="button"
                 onClick={onOpenCharacterDetail}
-                className="font-display-serif text-sm sm:text-base font-extrabold text-amber-100 hover:text-amber-300 truncate text-left drop-shadow"
+                className="font-display-serif text-xs sm:text-base font-extrabold text-amber-100 hover:text-amber-300 truncate text-left drop-shadow"
               >
                 {hidePrivate ? '自分（非公開）' : char.name}
               </button>
@@ -173,53 +177,53 @@ export const PlayerPanel: React.FC<PlayerPanelProps> = ({
               </button>
             </div>
 
-            <div className="flex items-baseline gap-1.5 mt-0.5">
-              <span className="text-[11px] font-bold text-amber-300/85">HP</span>
-              <span className="text-base sm:text-lg font-black tabular-nums text-white leading-none drop-shadow">
+            <div className="flex items-baseline gap-1 mt-0.5">
+              <span className="text-[10px] sm:text-[11px] font-bold text-amber-300/85">HP</span>
+              <span className="text-sm sm:text-lg font-black tabular-nums text-white leading-none drop-shadow">
                 {hidePrivate ? '? / ?' : `${remainingHp} / ${char.maxHp}`}
               </span>
             </div>
 
-            <div className="w-full h-2.5 rounded-full bg-[#090808] border border-[#c99e48]/70 overflow-hidden mt-1 shadow-inner">
+            <div className="w-full h-2 sm:h-2.5 rounded-full bg-[#090808] border border-[#c99e48]/70 overflow-hidden mt-0.5 sm:mt-1 shadow-inner">
               <div
                 className={`h-full bg-gradient-to-r ${barGradient} transition-all duration-500 ease-out`}
                 style={{ width: hidePrivate ? '100%' : `${hpPercent}%` }}
               />
             </div>
 
-            <div className="flex items-center gap-2 mt-1 text-[10px] text-amber-200/80 font-medium">
+            <div className="flex items-center gap-1.5 mt-0.5 sm:mt-1 text-[9.5px] sm:text-[10px] text-amber-200/80 font-medium">
               <span>{me.isRevealed ? '正体公開中' : '正体非公開'}</span>
               {(me.guardianAngelActive || me.eimiShieldActive) && (
                 <span className="inline-flex items-center gap-0.5 text-sky-300 font-bold">
-                  <Shield className="w-3 h-3" /> 防御中
+                  <Shield className="w-3 h-3" /> 防御
                 </span>
               )}
             </div>
           </div>
 
           {/* Physical Equipment Cards Tray */}
-          <div className="flex-1 min-w-0 border-l border-[#c99e48]/35 pl-2.5 sm:pl-3">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] sm:text-xs font-bold text-amber-200 whitespace-nowrap">
-                装備カード（{me.equipment.length}）
+          <div className="flex-1 min-w-0 border-l border-[#c99e48]/35 pl-2 sm:pl-3">
+            <div className="flex items-center justify-between gap-1 mb-0.5 sm:mb-1">
+              <span className="text-[9.5px] sm:text-xs font-bold text-amber-200 whitespace-nowrap">
+                装備（{me.equipment.length}）
               </span>
               <button
                 type="button"
                 onClick={onOpenCharacterDetail}
-                className="text-[10px] sm:text-xs font-bold text-sky-300 hover:text-sky-200 underline underline-offset-2 whitespace-nowrap"
+                className="text-[9.5px] sm:text-xs font-bold text-sky-300 hover:text-sky-200 underline underline-offset-2 whitespace-nowrap"
               >
-                能力・勝利条件
+                能力・勝利
               </button>
             </div>
 
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+            <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto pb-0.5">
               {Array.from({ length: slotCount }).map((_, idx) => {
                 const eq = me.equipment[idx];
                 if (!eq) {
                   return (
                     <div
                       key={`empty-${idx}`}
-                      className="w-10 h-[52px] sm:w-11 sm:h-14 rounded-md border border-dashed border-[#c99e48]/35 bg-black/45 shrink-0 flex items-center justify-center text-[10px] text-amber-400/35 shadow-inner"
+                      className="w-8 h-[42px] sm:w-11 sm:h-14 rounded-md border border-dashed border-[#c99e48]/35 bg-black/45 shrink-0 flex items-center justify-center text-[9px] sm:text-[10px] text-amber-400/35 shadow-inner"
                     >
                       空
                     </div>
@@ -234,14 +238,14 @@ export const PlayerPanel: React.FC<PlayerPanelProps> = ({
                     transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
                     onClick={() => onInspectCard(eq)}
                     title={`${eq.name}: ${eq.description}`}
-                    className={`w-10 h-[52px] sm:w-11 sm:h-14 rounded-md shrink-0 flex flex-col items-center justify-center p-1 transition-transform hover:-translate-y-0.5 active:scale-95 ${
+                    className={`w-8 h-[42px] sm:w-11 sm:h-14 rounded-md shrink-0 flex flex-col items-center justify-center p-0.5 sm:p-1 transition-transform hover:-translate-y-0.5 active:scale-95 ${
                       eq.deck === 'WHITE' ? 'parchment-card text-amber-950' : 'obsidian-card text-amber-100'
                     }`}
                   >
-                    <span className="text-sm sm:text-base leading-none drop-shadow">
+                    <span className="text-xs sm:text-base leading-none drop-shadow">
                       {getEquipIcon(eq.effectKey)}
                     </span>
-                    <span className="text-[8px] font-extrabold leading-tight mt-1 truncate w-full text-center">
+                    <span className="text-[7.5px] sm:text-[8px] font-extrabold leading-tight mt-0.5 sm:mt-1 truncate w-full text-center">
                       {eq.name.slice(0, 4)}
                     </span>
                   </motion.button>
@@ -252,15 +256,15 @@ export const PlayerPanel: React.FC<PlayerPanelProps> = ({
         </motion.div>
 
         {/* Right: Sculpted Action Plaque Button(s) */}
-        <div className="flex sm:flex-col gap-2 shrink-0 sm:w-[184px]">
+        <div className="flex sm:flex-col gap-1.5 sm:gap-2 shrink-0 sm:w-[184px]">
           {hasMyPrompt ? (
             <button
               type="button"
               disabled={isActionLocked}
               onClick={onPromptOpen}
-              className="gold-button flex-1 min-h-[50px] px-4 py-2.5 rounded-xl text-sm sm:text-base font-extrabold text-amber-50 flex items-center justify-center gap-2 whitespace-nowrap ring-1 ring-amber-300/75 disabled:opacity-60"
+              className="gold-button flex-1 min-h-[42px] sm:min-h-[50px] px-4 py-2 sm:py-2.5 rounded-xl text-sm sm:text-base font-extrabold text-amber-50 flex items-center justify-center gap-2 whitespace-nowrap ring-1 ring-amber-300/75 disabled:opacity-60"
             >
-              <Sparkles className="w-5 h-5 text-amber-300" />
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-300" />
               選択を実行する
             </button>
           ) : isMyTurn && phase === 'MOVE_ROLL' && me.isAlive ? (
@@ -269,9 +273,9 @@ export const PlayerPanel: React.FC<PlayerPanelProps> = ({
                 type="button"
                 disabled={isActionLocked}
                 onClick={onRollDice}
-                className="gold-button flex-1 min-h-[50px] px-4 py-2.5 rounded-xl text-sm sm:text-base font-extrabold text-amber-50 flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-60"
+                className="gold-button flex-1 min-h-[42px] sm:min-h-[50px] px-4 py-2 sm:py-2.5 rounded-xl text-sm sm:text-base font-extrabold text-amber-50 flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-60"
               >
-                <Dices className="w-5 h-5 text-amber-200" />
+                <Dices className="w-4 h-4 sm:w-5 sm:h-5 text-amber-200" />
                 ダイスを振る
               </button>
               {canEmmaTeleport && (
@@ -290,13 +294,13 @@ export const PlayerPanel: React.FC<PlayerPanelProps> = ({
               type="button"
               disabled={isActionLocked}
               onClick={onOpenAttackModal}
-              className="crimson-button flex-1 min-h-[50px] px-4 py-2.5 rounded-xl text-sm sm:text-base font-extrabold text-amber-50 flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-60"
+              className="crimson-button flex-1 min-h-[42px] sm:min-h-[50px] px-4 py-2 sm:py-2.5 rounded-xl text-sm sm:text-base font-extrabold text-amber-50 flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-60"
             >
-              <Swords className="w-5 h-5 text-amber-200" />
+              <Swords className="w-4 h-4 sm:w-5 sm:h-5 text-amber-200" />
               攻撃・ターン終了
             </button>
           ) : (
-            <div className="gold-panel flex-1 min-h-[50px] px-3 py-2 rounded-xl flex items-center justify-center text-xs sm:text-sm font-bold text-amber-200/85 text-center">
+            <div className="gold-panel flex-1 min-h-[42px] sm:min-h-[50px] px-3 py-1.5 sm:py-2 rounded-xl flex items-center justify-center text-xs sm:text-sm font-bold text-amber-200/85 text-center">
               {!me.isAlive
                 ? '観戦中（脱落）'
                 : activePlayerName

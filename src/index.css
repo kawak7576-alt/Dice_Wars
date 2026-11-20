@@ -6,11 +6,13 @@
     --font-body: 'Noto Sans JP', system-ui, -apple-system, sans-serif;
   }
 
+  html,
   body {
     font-family: var(--font-body);
     background-color: #160a05;
     color: #fef3c7;
     overflow-x: hidden;
+    max-width: 100%;
     -webkit-tap-highlight-color: transparent;
   }
 }

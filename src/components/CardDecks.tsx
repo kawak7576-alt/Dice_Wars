@@ -71,10 +71,10 @@ export const TurnOrderRoster: React.FC<TurnOrderRosterProps> = ({
 
   return (
     <div
-      className={`gold-panel rounded-lg p-1.5 w-full ${className}`}
+      className={`gold-panel rounded-lg p-1 sm:p-1.5 w-full ${className}`}
       style={{ boxShadow: '3px 4px 10px rgba(0,0,0,0.78)' }}
     >
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-[3px] sm:gap-1">
         {players.map((p) => {
           const isActive = p.id === activePlayerId;
           const isMe = p.id === myPlayerId;
@@ -84,7 +84,7 @@ export const TurnOrderRoster: React.FC<TurnOrderRosterProps> = ({
               type="button"
               onClick={() => onSelectPlayer?.(p)}
               title={`${p.name}${isMe ? '（自分）' : ''}の詳細情報を見る`}
-              className={`w-full px-1.5 py-1 rounded border text-left transition-colors flex items-center justify-between gap-1 ${
+              className={`w-full px-1.5 py-[3px] sm:py-1 rounded border text-left transition-colors flex items-center justify-between gap-1 ${
                 isActive
                   ? 'bg-amber-950/80 border-amber-300'
                   : isMe
@@ -94,7 +94,7 @@ export const TurnOrderRoster: React.FC<TurnOrderRosterProps> = ({
             >
               <span className="flex items-center gap-1 min-w-0">
                 <span
-                  className={`w-2.5 h-2.5 rounded-full shrink-0 border ${
+                  className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shrink-0 border ${
                     isActive ? 'border-amber-200 ring-1 ring-amber-300' : 'border-amber-100'
                   }`}
                   style={{ backgroundColor: p.color.hex }}
@@ -128,9 +128,9 @@ export const CardDecks: React.FC<CardDecksProps> = ({
   onSelectPlayer,
 }) => {
   return (
-    <div className="flex flex-col items-center gap-2 sm:gap-3 shrink-0 w-full sm:w-[86px] lg:w-[98px] select-none">
-      {/* Mobile (<sm): horizontal row (Green, White, Black) above Area Board. Desktop (sm+): vertical stack */}
-      <div className="flex flex-row sm:flex-col items-center justify-center gap-3 sm:gap-3.5 w-full">
+    <div className="flex flex-col items-center gap-0 sm:gap-3 shrink-0 w-full sm:w-[86px] lg:w-[98px] select-none">
+      {/* Mobile (<sm): compact horizontal row (Green, White, Black) tight above Area Board. Desktop (sm+): vertical stack */}
+      <div className="flex flex-row sm:flex-col items-center justify-center gap-2.5 sm:gap-3.5 w-full pb-0.5 sm:pb-0">
         {DECK_META.map((item) => {
           const isHighlighted = highlightDeck === item.deck;
           const count = counts[item.deck];
@@ -142,7 +142,7 @@ export const CardDecks: React.FC<CardDecksProps> = ({
               key={item.deck}
               type="button"
               onClick={() => onInspectDeck(item.deck)}
-              className="group relative w-[52px] sm:w-[74px] lg:w-[85px] text-left transition-transform hover:-translate-y-0.5 active:scale-[0.98]"
+              className="group relative w-[46px] sm:w-[74px] lg:w-[85px] text-left transition-transform hover:-translate-y-0.5 active:scale-[0.98]"
               title={`${item.jpLabel}一覧（残 ${count}枚）`}
             >
               {/* Grounded tabletop contact shadow beneath left-leaning deck base */}

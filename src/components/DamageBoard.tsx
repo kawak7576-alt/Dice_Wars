@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { LayoutGroup, motion } from 'motion/react';
+import { Maximize2 } from 'lucide-react';
 import damageBoardImg from '../assets/images/damage_track_board_1794830461204.jpg';
-import { DAMAGE_BOARD_LABELS } from '../data/gameData.ts';
 import type { PublicPlayerView } from '../types/game.ts';
 import { PlayerMedal } from './PlayerMedal.tsx';
 
@@ -10,7 +10,7 @@ interface DamageBoardProps {
   activePlayerId: string | null;
   myPlayerId: string | null;
   combatTargetIds?: Set<string>;
-  onSelectPlayer: (player: PublicPlayerView) => void;
+  onOpenExpanded?: () => void;
 }
 
 const STAGES = [14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
@@ -20,7 +20,7 @@ export const DamageBoard: React.FC<DamageBoardProps> = ({
   activePlayerId,
   myPlayerId,
   combatTargetIds,
-  onSelectPlayer,
+  onOpenExpanded,
 }) => {
   const prevDamagesRef = useRef<Record<string, number>>({});
   const [deltaMap, setDeltaMap] = useState<Record<string, 'UP' | 'DOWN'>>({});
@@ -43,9 +43,15 @@ export const DamageBoard: React.FC<DamageBoardProps> = ({
   }, [players]);
 
   return (
-    <div className="flex flex-col shrink-0 select-none w-[86px] sm:w-[116px] lg:w-[138px]">
+    <button
+      type="button"
+      onClick={() => onOpenExpanded?.()}
+      title="タップして拡大ダメージボードを表示"
+      aria-label="ダメージボードを拡大表示"
+      className="flex flex-col shrink-0 select-none w-[78px] sm:w-[116px] lg:w-[138px] text-left group focus:outline-none cursor-pointer"
+    >
       {/* Physical thick board wrapper with unified bottom-right tabletop contact shadow */}
-      <div className="relative">
+      <div className="relative w-full">
         {/* Soft tabletop ambient + contact shadow */}
         <div
           className="absolute inset-0 translate-x-[5px] translate-y-[7px] rounded-xl pointer-events-none"
@@ -65,7 +71,7 @@ export const DamageBoard: React.FC<DamageBoardProps> = ({
 
         {/* Board Top Surface with Sculpted 3D Beveled Frame */}
         <div
-          className="relative rounded-xl overflow-hidden bg-[#160e09]"
+          className="relative rounded-xl overflow-hidden bg-[#160e09] transition-transform group-active:scale-[0.99]"
           style={{
             borderTop: '2.5px solid #e2bc68',
             borderLeft: '2.5px solid #cfa54e',
@@ -87,35 +93,35 @@ export const DamageBoard: React.FC<DamageBoardProps> = ({
             className="absolute inset-0 pointer-events-none"
             style={{
               background:
-                'linear-gradient(90deg, rgba(10,6,4,0.74) 0%, rgba(12,8,6,0.36) 48%, rgba(10,6,4,0.7) 100%)',
+                'linear-gradient(90deg, rgba(10,6,4,0.78) 0%, rgba(12,8,6,0.4) 48%, rgba(10,6,4,0.74) 100%)',
             }}
           />
 
           {/* Header Wood/Brass Plaque */}
-          <div className="relative z-10 bg-gradient-to-b from-[#2f2217]/95 to-[#17100b]/95 border-b-2 border-[#b98f3e] py-1 px-1 text-center">
-            <span className="text-[10px] sm:text-xs font-extrabold tracking-wider text-amber-200 whitespace-nowrap drop-shadow">
-              ダメージボード
+          <div className="relative z-10 bg-gradient-to-b from-[#2f2217]/95 to-[#17100b]/95 border-b-2 border-[#b98f3e] py-0.5 sm:py-1 px-1 flex items-center justify-center gap-0.5">
+            <span className="text-[9px] sm:text-xs font-extrabold tracking-tight sm:tracking-wider text-amber-200 whitespace-nowrap drop-shadow">
+              ダメージ
             </span>
+            <Maximize2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-300/80 shrink-0" />
           </div>
 
-          {/* Dynamic 15 Stages (14 down to 0) with sliding physical markers */}
+          {/* Dynamic 15 Stages (14 down to 0) showing ONLY numerals and colored player pawns */}
           <LayoutGroup id="damage-board">
             <div className="relative z-10 flex flex-col divide-y divide-[#dfba64]/35">
               {STAGES.map((stage) => {
-                const labels = DAMAGE_BOARD_LABELS[stage] ?? [];
                 const playersHere = players.filter((p) => p.damage === stage);
 
                 return (
                   <div
                     key={stage}
-                    className="relative flex items-center justify-between px-1.5 py-[2.5px] sm:py-[3.5px] min-h-[22px] sm:min-h-[25px]"
+                    className="relative flex items-center justify-between px-1 sm:px-1.5 py-[1.5px] sm:py-[3px] min-h-[18.5px] sm:min-h-[24px]"
                   >
                     {/* Engraved Stage Numeral */}
-                    <span className="text-[11px] sm:text-xs font-black tabular-nums text-amber-100 w-5 text-right shrink-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.95)]">
+                    <span className="text-[10.5px] sm:text-xs font-black tabular-nums text-amber-100 w-4 sm:w-5 text-right shrink-0 drop-shadow-[0_1px_2px_rgba(0,0,0,0.95)]">
                       {stage}
                     </span>
 
-                    {/* Sliding Physical Player Markers + Stage Character Threshold Markers */}
+                    {/* Sliding Physical Player Markers */}
                     <div className="flex items-center justify-end gap-0.5 flex-wrap flex-1 pl-1">
                       {playersHere.map((p) => {
                         const isActive = p.id === activePlayerId;
@@ -153,26 +159,8 @@ export const DamageBoard: React.FC<DamageBoardProps> = ({
                               isMe={isMe}
                               isUnderAttack={isUnderAttack}
                               title={`${p.name}（ダメージ ${p.damage}）`}
-                              onClick={() => onSelectPlayer(p)}
                             />
                           </motion.div>
-                        );
-                      })}
-
-                      {labels.map((code) => {
-                        const colorClass = ['U', 'V', 'W'].includes(code)
-                          ? 'bg-gradient-to-b from-purple-800 to-purple-950 border-purple-300/85 text-purple-100'
-                          : ['A', 'B', 'C', 'D'].includes(code)
-                          ? 'bg-gradient-to-b from-yellow-400 to-amber-500 border-yellow-100 text-slate-950'
-                          : 'bg-gradient-to-b from-red-600 to-red-900 border-red-300/85 text-red-50';
-                        return (
-                          <span
-                            key={code}
-                            className={`w-[16px] h-[16px] sm:w-[18px] sm:h-[18px] rounded-full flex items-center justify-center text-[9px] sm:text-[10px] font-black border ${colorClass}`}
-                            style={{ boxShadow: '1px 1.5px 2.5px rgba(0,0,0,0.85)' }}
-                          >
-                            {code}
-                          </span>
                         );
                       })}
                     </div>
@@ -183,6 +171,6 @@ export const DamageBoard: React.FC<DamageBoardProps> = ({
           </LayoutGroup>
         </div>
       </div>
-    </div>
+    </button>
   );
 };
