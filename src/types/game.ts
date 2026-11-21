@@ -189,6 +189,7 @@ export interface RoomView {
     character: CharacterDef;
     reason: string;
   }[];
+  enabledCharacterIds: string[];
   guidanceText: string;
 }
 
@@ -200,10 +201,24 @@ export interface RoomSummary {
 }
 
 export type ClientMessage =
-  | { type: 'CREATE_ROOM'; playerName: string; maxPlayers: 4 | 5 | 6; sessionToken: string }
+  | {
+      type: 'CREATE_ROOM';
+      playerName: string;
+      maxPlayers: 4 | 5 | 6;
+      sessionToken: string;
+      enabledCharacterIds?: string[];
+    }
   | { type: 'JOIN_ROOM'; roomCode: string; playerName: string; sessionToken: string }
-  | { type: 'JOIN_FIXED_ROOM'; roomCode: string; playerName: string; maxPlayers: 4 | 5 | 6; sessionToken: string }
+  | {
+      type: 'JOIN_FIXED_ROOM';
+      roomCode: string;
+      playerName: string;
+      maxPlayers: 4 | 5 | 6;
+      sessionToken: string;
+      enabledCharacterIds?: string[];
+    }
   | { type: 'SET_MAX_PLAYERS'; maxPlayers: 4 | 5 | 6 }
+  | { type: 'SET_ENABLED_CHARACTERS'; characterIds: string[] }
   | { type: 'RECONNECT'; roomCode: string; sessionToken: string }
   | { type: 'ADD_CPU' }
   | { type: 'REMOVE_CPU'; playerId: string }

@@ -430,10 +430,20 @@ export default function App() {
           soundFX.muted = next;
           setMuted(next);
         }}
-        onJoinFixedRoom={(roomCode, playerName, maxPlayers) =>
-          sendMessage({ type: 'JOIN_FIXED_ROOM', roomCode, playerName, maxPlayers, sessionToken })
+        onJoinFixedRoom={(roomCode, playerName, maxPlayers, enabledCharacterIds) =>
+          sendMessage({
+            type: 'JOIN_FIXED_ROOM',
+            roomCode,
+            playerName,
+            maxPlayers,
+            sessionToken,
+            enabledCharacterIds,
+          })
         }
         onSetMaxPlayers={(maxPlayers) => sendMessage({ type: 'SET_MAX_PLAYERS', maxPlayers })}
+        onSetEnabledCharacters={(characterIds) =>
+          sendMessage({ type: 'SET_ENABLED_CHARACTERS', characterIds })
+        }
         onAddCpu={() => sendMessage({ type: 'ADD_CPU' })}
         onRemoveCpu={(playerId) => sendMessage({ type: 'REMOVE_CPU', playerId })}
         onStartGame={() => sendMessage({ type: 'START_GAME' })}
