@@ -82,6 +82,7 @@ export interface GameRoom {
   lastAttackKillByCraig: boolean;
   craigSecondAttackUsed: boolean;
   attackPhaseResumeAfterPrompt: boolean;
+  enabledCharacterIds: string[];
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -137,7 +138,40 @@ export function addLog(room: GameRoom, text: string, tone: LogEntry['tone'] = 'i
   }
 }
 
-export function createRoom(roomCode: string, hostName: string, sessionToken: string, maxPlayers: 4 | 5 | 6): GameRoom {
+export function getRequiredCitizenCount(maxPlayers: 4 | 5 | 6): number {
+  return maxPlayers === 6 ? 2 : maxPlayers === 5 ? 1 : 0;
+}
+
+export function validateEnabledCharacterIds(characterIds: unknown, maxPlayers: 4 | 5 | 6): string[] {
+  if (!Array.isArray(characterIds)) {
+    throw new Error('登場キャラクターの設定形式が不正です。');
+  }
+  const requestedSet = new Set(characterIds.filter((id): id is string => typeof id === 'string'));
+  const validChars = CHARACTERS.filter((c) => requestedSet.has(c.id));
+
+  const raidersCount = validChars.filter((c) => c.faction === 'RAIDER').length;
+  const shadowsCount = validChars.filter((c) => c.faction === 'SHADOW').length;
+  const citizensCount = validChars.filter((c) => c.faction === 'CITIZEN').length;
+  const requiredCitizens = getRequiredCitizenCount(maxPlayers);
+
+  if (raidersCount < 2 || shadowsCount < 2 || citizensCount < requiredCitizens) {
+    throw new Error(
+      `${maxPlayers}人戦ではレイダー2人以上、シャドウ2人以上${
+        requiredCitizens > 0 ? `、シチズン${requiredCitizens}人以上` : ''
+      }を有効にしてください。`
+    );
+  }
+
+  return validChars.map((c) => c.id);
+}
+
+export function createRoom(
+  roomCode: string,
+  hostName: string,
+  sessionToken: string,
+  maxPlayers: 4 | 5 | 6,
+  initialEnabledCharacterIds?: string[]
+): GameRoom {
   const host: InternalPlayer = {
     id: uid(),
     sessionToken,
@@ -164,6 +198,11 @@ export function createRoom(roomCode: string, hostName: string, sessionToken: str
     receivedGreenCard: null,
   };
 
+  const enabledCharacterIds =
+    Array.isArray(initialEnabledCharacterIds) && initialEnabledCharacterIds.length > 0
+      ? validateEnabledCharacterIds(initialEnabledCharacterIds, maxPlayers)
+      : CHARACTERS.map((c) => c.id);
+
   return {
     roomCode,
     maxPlayers,
@@ -183,7 +222,15 @@ export function createRoom(roomCode: string, hostName: string, sessionToken: str
     lastAttackKillByCraig: false,
     craigSecondAttackUsed: false,
     attackPhaseResumeAfterPrompt: false,
+    enabledCharacterIds,
   };
+}
+
+export function setEnabledCharacters(room: GameRoom, characterIds: unknown): void {
+  if (room.phase !== 'LOBBY') {
+    throw new Error('ゲーム開始後は登場キャラクター設定を変更できません。');
+  }
+  room.enabledCharacterIds = validateEnabledCharacterIds(characterIds, room.maxPlayers);
 }
 
 export function joinRoom(room: GameRoom, playerName: string, sessionToken: string): InternalPlayer {
@@ -288,13 +335,28 @@ export function startGame(room: GameRoom): void {
   }
 
   // Faction setup: 4p -> 2 Raider, 2 Shadow, 0 Citizen; 5p -> 2 Raider, 2 Shadow, 1 Citizen; 6p -> 2 Raider, 2 Shadow, 2 Citizen
-  const raiders = shuffle(CHARACTERS.filter((c) => c.faction === 'RAIDER')).slice(0, 2);
-  const shadows = shuffle(CHARACTERS.filter((c) => c.faction === 'SHADOW')).slice(0, 2);
-  const citizenCount = room.maxPlayers === 6 ? 2 : room.maxPlayers === 5 ? 1 : 0;
-  const citizens =
-    citizenCount > 0
-      ? shuffle(CHARACTERS.filter((c) => c.faction === 'CITIZEN')).slice(0, citizenCount)
-      : [];
+  const enabledSet = new Set(room.enabledCharacterIds);
+  const enabledPool = CHARACTERS.filter((c) => enabledSet.has(c.id));
+  const availableRaiders = enabledPool.filter((c) => c.faction === 'RAIDER');
+  const availableShadows = enabledPool.filter((c) => c.faction === 'SHADOW');
+  const availableCitizens = enabledPool.filter((c) => c.faction === 'CITIZEN');
+  const citizenCount = getRequiredCitizenCount(room.maxPlayers);
+
+  if (
+    availableRaiders.length < 2 ||
+    availableShadows.length < 2 ||
+    availableCitizens.length < citizenCount
+  ) {
+    throw new Error(
+      `登場キャラクター設定が不足しています（${room.maxPlayers}人戦ではレイダー2人以上、シャドウ2人以上${
+        citizenCount > 0 ? `、シチズン${citizenCount}人以上` : ''
+      }が必要です）。`
+    );
+  }
+
+  const raiders = shuffle(availableRaiders).slice(0, 2);
+  const shadows = shuffle(availableShadows).slice(0, 2);
+  const citizens = citizenCount > 0 ? shuffle(availableCitizens).slice(0, citizenCount) : [];
   const dealtChars = shuffle([...raiders, ...shadows, ...citizens]);
 
   room.players = shuffle(room.players).map((p, idx) => ({
@@ -1991,6 +2053,7 @@ export function getSanitizedStateForPlayer(room: GameRoom, viewerPlayerId: strin
     pendingPrompt: sanitizedPrompt,
     logs: room.logs.slice(-50),
     winners: room.winners,
+    enabledCharacterIds: [...room.enabledCharacterIds],
     guidanceText: buildGuidanceText(room, viewerPlayerId),
   };
 }

@@ -19,7 +19,9 @@ import {
   removeCpuPlayer,
   resetRoomToLobby,
   runCpuStepIfNeeded,
+  setEnabledCharacters,
   startGame,
+  validateEnabledCharacterIds,
   type GameRoom,
 } from './server/gameEngine.ts';
 import { buildProjectZipBuffer } from './server/zipBuilder.ts';
@@ -220,7 +222,7 @@ function handleClientMessage(conn: ClientConn, msg: ClientMessage): void {
   if (msg.type === 'CREATE_ROOM') {
     const validMaxPlayers: 4 | 5 | 6 = [4, 5, 6].includes(msg.maxPlayers) ? msg.maxPlayers : 5;
     const code = generateRoomCode();
-    const room = createRoom(code, msg.playerName, msg.sessionToken, validMaxPlayers);
+    const room = createRoom(code, msg.playerName, msg.sessionToken, validMaxPlayers, msg.enabledCharacterIds);
     rooms.set(code, room);
     const host = room.players[0];
     conn.roomCode = code;
@@ -239,7 +241,7 @@ function handleClientMessage(conn: ClientConn, msg: ClientMessage): void {
     let room = rooms.get(code);
     if (!room) {
       const validMaxPlayers: 4 | 5 | 6 = [4, 5, 6].includes(msg.maxPlayers) ? msg.maxPlayers : 5;
-      room = createRoom(code, msg.playerName, msg.sessionToken, validMaxPlayers);
+      room = createRoom(code, msg.playerName, msg.sessionToken, validMaxPlayers, msg.enabledCharacterIds);
       rooms.set(code, room);
       const host = room.players[0];
       conn.roomCode = code;
@@ -348,7 +350,15 @@ function handleClientMessage(conn: ClientConn, msg: ClientMessage): void {
       if (room.players.length > msg.maxPlayers) {
         throw new Error(`すでに参加人数が${msg.maxPlayers}人を超えているため${msg.maxPlayers}人戦に変更できません。`);
       }
+      validateEnabledCharacterIds(room.enabledCharacterIds, msg.maxPlayers);
       room.maxPlayers = msg.maxPlayers;
+      broadcastRoom(room);
+      return;
+    }
+
+    case 'SET_ENABLED_CHARACTERS': {
+      if (!player.isHost) throw new Error('ホストのみ登場キャラクター設定を変更できます。');
+      setEnabledCharacters(room, msg.characterIds);
       broadcastRoom(room);
       return;
     }
